@@ -91,12 +91,18 @@ sys_uptime(void)
 }
 
 int
-sys_mycall(void)
+sys_setprio(void)
 {
-  uint xticks;
+  int n;
 
-  acquire(&tickslock);
-  xticks = ticks;
-  release(&tickslock);
-  return xticks;
+  if(argint(0, &n) < 0)
+    return -1;
+  proc->prio = n;
+  return 0;
+}
+
+int
+sys_getprio(void)
+{
+  return proc->prio;
 }
