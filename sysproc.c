@@ -95,7 +95,7 @@ sys_setprio(void)
 {
   int n;
 
-  if(argint(0, &n) < 0)
+  if(argint(0, &n) < 1)
     return -1;
   proc->prio = n;
   return 0;
