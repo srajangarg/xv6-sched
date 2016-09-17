@@ -47,7 +47,8 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   // default priority of new process
-  p->prio = 0;
+  p->prio = 1;
+  p->round = 0;
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -400,6 +401,7 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   proc->chan = chan;
   proc->state = SLEEPING;
+  proc->round -= (proc->prio-1);
   sched();
 
   // Tidy up.
