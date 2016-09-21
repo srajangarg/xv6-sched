@@ -135,11 +135,6 @@ getcmd(char *buf, int nbuf)
 {
   printf(2, "$ ");
 
-  // testing get and setprio
-  printf(2, "%d ", getprio());
-  setprio(3);
-  printf(2, "%d ", getprio());
-
   memset(buf, 0, nbuf);
   gets(buf, nbuf);
   if(buf[0] == 0) // EOF
