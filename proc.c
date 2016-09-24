@@ -74,6 +74,16 @@ found:
   return p;
 }
 
+int
+setprio(int nprio)
+{
+  acquire(&ptable.lock);
+  proc->round = 0;
+  proc->prio = nprio;
+  release(&ptable.lock);
+  return 0;
+}
+
 //PAGEBREAK: 32
 // Set up first user process.
 void
