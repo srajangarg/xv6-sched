@@ -46,8 +46,6 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  // default priority of new process
-  p->prio = 0;
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -106,6 +104,10 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
+
+  // init process defaults
+  p->ticks = 0;
+  p->prio = 1;
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
@@ -178,6 +180,10 @@ fork(void)
   np->cwd = idup(proc->cwd);
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
+
+  // forked process defaults
+  np->ticks = proc->ticks;
+  np->prio = proc->prio;
 
   pid = np->pid;
 
