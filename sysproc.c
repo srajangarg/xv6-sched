@@ -93,13 +93,16 @@ sys_uptime(void)
 int
 sys_setprio(void)
 {
-  int n;
+  int nprio;
 
-  if(argint(0, &n) < 0)
+  if(argint(0, &nprio) < 0)
     return -1;
-  if(n < 1)
+  if(nprio < 1)
     return -1;
-  proc->prio = n;
+
+  int nticks = (int)(proc->ticks * ((float)nprio / proc->prio));
+  proc->ticks = nticks;
+  proc->prio = nprio;
   return 0;
 }
 
