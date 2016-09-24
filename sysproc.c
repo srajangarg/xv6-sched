@@ -94,16 +94,12 @@ int
 sys_setprio(void)
 {
   int nprio;
-
   if(argint(0, &nprio) < 0)
     return -1;
   if(nprio < 1)
     return -1;
 
-  int nticks = (int)(proc->ticks * ((float)nprio / proc->prio));
-  proc->ticks = nticks;
-  proc->prio = nprio;
-  return 0;
+  return setprio(nprio);
 }
 
 int

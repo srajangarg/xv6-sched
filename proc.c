@@ -71,6 +71,18 @@ found:
   return p;
 }
 
+int
+setprio(int nprio)
+{
+  int nticks = (int)(proc->ticks * ((float)nprio / proc->prio));
+
+  acquire(&ptable.lock);
+  proc->ticks = nticks;
+  proc->prio = nprio;
+  release(&ptable.lock);
+  return 0;
+}
+
 //PAGEBREAK: 32
 // Set up first user process.
 void
