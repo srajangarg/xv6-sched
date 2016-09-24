@@ -284,6 +284,26 @@ wait(void)
   }
 }
 
+struct proc *getminproc()
+{
+  struct proc *mp = 0;
+
+  for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state != RUNNABLE)
+      continue;
+
+    if(mp == 0)
+      mp = p;
+
+    if((float)p->ticks/p->prio < (float)mp->ticks/mp->prio)
+      mp = p;
+    else if ((float)p->ticks/p->prio == (float)mp->ticks/mp->prio)
+      if (p->prio > mp->prio)
+        mp = p;
+  }
+  return mp;
+}
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -295,33 +315,32 @@ wait(void)
 void
 scheduler(void)
 {
-  struct proc *p;
-
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
+    for(;;){
+      struct proc* minp = getminproc();
+
+      if(minp == 0)
+        break;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      swtch(&cpu->scheduler, p->context);
+      proc = minp;
+      switchuvm(minp);
+      minp->state = RUNNING;
+      swtch(&cpu->scheduler, minp->context);
       switchkvm();
-
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
     }
+      
     release(&ptable.lock);
-
   }
 }
 
