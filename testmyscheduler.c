@@ -10,7 +10,7 @@ cpuintensive(int index)
     temp += i;
 
   int ttime = uptime() - stime;
-    printf(1, "child %d finished cpuintensive work in %d ticks, calculated %d\n", index, ttime, temp);
+    printf(1, "child %d finished cpu intensive work in %d ticks, calculated %d\n", index, ttime, temp);
 }
 
 void
@@ -27,7 +27,7 @@ int
 main(int argc, char *argv[])
 {
   //Test Case 1
-  printf(1, "Test Case 1 ...\n");
+  printf(1, "\nTest Case 1 ...\n");
   printf(1, "Forking a cpu intensive processes ...\n");
   printf(1, "Main process also do same amount of processing ...\n");
   
@@ -36,20 +36,25 @@ main(int argc, char *argv[])
   int temp = 0;
   int prio = 3;
 
-  if(pid < 0) {
+  if(pid < 0)
+  {
     printf(1, "fork failed!\n");
     exit();
   }
 
   stime = uptime();
 
-  if(pid != 0) {
+  if(pid != 0)
+  {
     setprio(prio);
   }
 
-  if(pid == 0) {
+  if(pid == 0)
+  {
     printf(1, "child  priority : %d\n", getprio());
-  } else {
+  }
+  else
+  {
     printf(1, "parent priority : %d\n", getprio());
     printf(1, "expected ratio of finishing times : %d/%d\n", 2*prio, prio + 1);
   }
@@ -60,16 +65,43 @@ main(int argc, char *argv[])
       temp += i;
 
   ttime = uptime() - stime;
-  if(pid == 0) {
-    printf(1, "child finsihed after %d ticks, got %d\n", ttime, temp);
+  if(pid == 0)
+  {
+    printf(1, "child finished after %d ticks, calculated %d\n", ttime, temp);
     exit();
-  } else {
-    printf(1, "parent finsihed after %d ticks, got %d\n", ttime, temp);
+  }
+  else
+  {
+    printf(1, "parent finished after %d ticks, calculated %d\n", ttime, temp);
     wait();
   }
 
   // TestCase 2
-  printf(1, "Test Case 2 Running ...\n");
+  printf(1, "\nTest Case 2 Running ...\n");
+  printf(1, "Creating 5 cpu intensive process with priorities 1, 2, 3, 4 and 5 ...\n");
+  printf(1, "Main process waits for these to terminate ...\n");
+
+  
+  for(int i = 0; i < 5; i++)
+  {
+    pid = fork();
+    if(pid < 0)
+    {
+      printf(1, "fork failed!\n");
+      exit();
+    }
+    if(pid == 0)
+    {
+      setprio(i + 1);
+      cpuintensive(i);
+      exit();
+    }
+  }
+
+  while(wait() > 0);
+
+  // TestCase 3
+  printf(1, "\nTest Case 3 Running ...\n");
   printf(1, "Creating 8 cpu intensive process with priority 10 and \n");
   printf(1, "one sleeping process with priority 1 and another one with priority 100..\n");
 
@@ -77,7 +109,8 @@ main(int argc, char *argv[])
   for(int i = 0; i < 10; i++)
   {
     pid = fork();
-    if(pid < 0) {
+    if(pid < 0)
+    {
       printf(1, "fork failed!\n");
       exit();
     }
