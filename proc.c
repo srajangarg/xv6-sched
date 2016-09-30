@@ -49,6 +49,9 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  // default priority of new process
+  p->prio = 1;
+  p->round = 0;
 
   release(&ptable.lock);
 
@@ -74,6 +77,16 @@ found:
   p->context->eip = (uint)forkret;
 
   return p;
+}
+
+int
+setprio(int nprio)
+{
+  acquire(&ptable.lock);
+  proc->round = 0;
+  proc->prio = nprio;
+  release(&ptable.lock);
+  return 0;
 }
 
 //PAGEBREAK: 32
@@ -390,6 +403,7 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   proc->chan = chan;
   proc->state = SLEEPING;
+  proc->round -= (proc->prio-1);
   sched();
 
   // Tidy up.
