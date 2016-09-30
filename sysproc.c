@@ -89,3 +89,21 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_setprio(void)
+{
+  int nprio;
+  if(argint(0, &nprio) < 0)
+    return -1;
+  if(nprio < 1)
+    return -1;
+
+  return setprio(nprio);
+}
+
+int
+sys_getprio(void)
+{
+  return proc->prio;
+}
