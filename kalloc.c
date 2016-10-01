@@ -120,7 +120,7 @@ getfreepages(void)
 int
 incpageref(int pagenum)
 {
-  if (pagenum < (KERNBASE/PGSIZE))
+  if (pagenum < (PHYSTOP/PGSIZE))
   {
     if(kmem.use_lock)
       acquire(&kmem.lock);
@@ -135,7 +135,7 @@ incpageref(int pagenum)
 int
 decpageref(int pagenum)
 {
-  if (pagenum < (KERNBASE/PGSIZE))
+  if (pagenum < (PHYSTOP/PGSIZE))
   {
     if(kmem.use_lock)
       acquire(&kmem.lock);
