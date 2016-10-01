@@ -188,6 +188,13 @@ inituvm(pde_t *pgdir, char *init, uint sz)
   if(sz >= PGSIZE)
     panic("inituvm: more than a page");
   mem = kalloc();
+
+  int pagenum = V2P(mem) / PGSIZE;
+  if (incpageref(pagenum) < 0)
+    panic("incpageref");
+  else
+    cprintf("inc %d\n", pagenum);
+
   memset(mem, 0, PGSIZE);
   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
   memmove(mem, init, sz);
@@ -233,6 +240,13 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   a = PGROUNDUP(oldsz);
   for(; a < newsz; a += PGSIZE){
     mem = kalloc();
+
+    int pagenum = V2P(mem) / PGSIZE;
+    if (incpageref(pagenum) < 0)
+      panic("incpageref");
+    else
+      cprintf("inc %d\n", pagenum);
+
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
       deallocuvm(pgdir, newsz, oldsz);
@@ -269,6 +283,13 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       a += (NPTENTRIES - 1) * PGSIZE;
     else if((*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);
+
+      int pagenum = pa / PGSIZE;
+      if (decpageref(pagenum) < 0)
+        panic("decpageref");
+      else
+        cprintf("dec %d\n", pagenum);
+
       if(pa == 0)
         panic("kfree");
       char *v = P2V(pa);
@@ -335,6 +356,12 @@ copyuvm(pde_t *pgdir, uint sz)
     memmove(mem, (char*)P2V(pa), PGSIZE);
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
+
+    int pagenum = V2P(mem) / PGSIZE;
+    if (incpageref(pagenum) < 0)
+      panic("incpageref");
+    else
+      cprintf("inc %d\n", pagenum);
   }
   return d;
 

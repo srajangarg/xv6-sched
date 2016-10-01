@@ -20,6 +20,7 @@ struct {
   struct spinlock lock;
   int use_lock;
   struct run *freelist;
+  uchar pageref[KERNBASE/PGSIZE];
 } kmem;
 
 // Initialization happens in two phases.
@@ -102,4 +103,49 @@ getfreepages(void)
   while((r = r->next))
     i++;
   return i;
+}
+
+int
+incpageref(int pagenum)
+{
+  if (pagenum < (KERNBASE/PGSIZE))
+  {
+    if(kmem.use_lock)
+      acquire(&kmem.lock);
+    kmem.pageref[pagenum] += 1;
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    return 0;
+  }
+  return -1;
+}
+
+int
+decpageref(int pagenum)
+{
+  if (pagenum < (KERNBASE/PGSIZE))
+  {
+    if(kmem.use_lock)
+      acquire(&kmem.lock);
+    kmem.pageref[pagenum] -= 1;
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    return 0;
+  }
+  return -1;
+}
+
+int
+getpageref(int pagenum)
+{
+  if (pagenum < (KERNBASE/PGSIZE))
+  {
+    if(kmem.use_lock)
+      acquire(&kmem.lock);
+    int x = kmem.pageref[pagenum];
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    return x;
+  }
+  return -1;
 }
