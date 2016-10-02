@@ -1,25 +1,84 @@
 #include "types.h"
 #include "user.h"
 
-int main()
-{	
-	int x = 1;
-	printf(1, "frames before fork 1 : %d\n", getNumFreePages());
-	int pid1 = fork();
-	if (pid1 == 0) {
-		// x = 2;
-		printf(1, "%d frames after fork 1 : %d\n", x, getNumFreePages());
-		// int pid2 = fork();
-		// if (pid2 == 0) {
-		// 	printf(1, "frames after fork 2 : %d\n", getNumFreePages());
+int x = 1;
 
-		// } else {
-		// 	wait();
-		// 	printf(1, "frames after wait 2 : %d\n", getNumFreePages());
-		// }
-	} else {
-		wait();
-		printf(1, "%d frames after wait 1 : %d\n", x, getNumFreePages());
-	}
-	exit();
+void test1()
+{
+  printf(1, "Free pages before fork : %d, x : %d\n", getNumFreePages(), x);
+  if(fork() == 0)
+  {
+    printf(1, "Free pages after fork : %d, x : %d\n", getNumFreePages(), x);
+    x = 2;
+    printf(1, "Free pages after updating x in child : %d, x : %d\n", getNumFreePages(), x);
+    exit();
+  }
+  else
+  {
+    wait();
+    printf(1, "Free pages after reaping child : %d, x : %d\n", getNumFreePages(), x);
+  }
+}
+
+void test2()
+{
+  printf(1, "Free pages before fork : %d, x : %d\n", getNumFreePages(), x);
+  if(fork() == 0)
+  {
+    printf(1, "Free pages after fork 1 : %d, x : %d\n", getNumFreePages(), x);
+    if(fork() == 0)
+    {
+      printf(1, "Free pages after fork 2 : %d, x : %d\n", getNumFreePages(), x);
+      x = 2;
+      printf(1, "Free pages after updating x in child 2 : %d, x : %d\n", getNumFreePages(), x);
+      exit();
+    }
+    else
+    {
+      wait();
+      printf(1, "Free pages after reaping child 2 : %d, x : %d\n", getNumFreePages(), x);
+      x = 2;
+      printf(1, "Free pages after updating x in child 1: %d, x : %d\n", getNumFreePages(), x);
+    }
+    exit();
+  }
+  else
+  {
+    wait();
+    printf(1, "Free pages after reaping both child : %d, x : %d\n", getNumFreePages(), x);
+  }
+}
+
+void test3()
+{
+  printf(1, "Free pages before fork : %d, x : %d\n", getNumFreePages(), x);
+  if(fork() == 0)
+  {
+    printf(1, "Free pages after fork : %d, x : %d\n", getNumFreePages(), x);
+    exit();
+  }
+  else
+  {
+    wait();
+    printf(1, "Free pages after reaping child : %d, x : %d\n", getNumFreePages(), x);
+    x = 2;
+    printf(1, "Free pages after updating x in parent: %d, x : %d\n", getNumFreePages(), x);
+  }
+}
+
+int main()
+{   
+  printf(1, "Test Case 1 ...\n");
+  test1();
+  printf(1, "------------------------\n");
+
+  printf(1, "Test Case 2 ...\n");
+  test2();
+  printf(1, "------------------------\n");    
+
+  printf(1, "Test Case 3 ...\n");
+  test();
+  printf(1, "------------------------\n");
+
+  exit();
 }
