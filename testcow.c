@@ -67,17 +67,17 @@ void test3()
 }
 
 int main()
-{   
+{
   printf(1, "Test Case 1 ...\n");
   test1();
   printf(1, "------------------------\n");
 
   printf(1, "Test Case 2 ...\n");
   test2();
-  printf(1, "------------------------\n");    
+  printf(1, "------------------------\n");
 
   printf(1, "Test Case 3 ...\n");
-  test();
+  test3();
   printf(1, "------------------------\n");
 
   exit();

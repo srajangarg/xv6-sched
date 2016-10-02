@@ -34,7 +34,6 @@ idtinit(void)
 
 void pagefault(void)
 {
-  // cprintf("pagefault\n");
   uint va = rcr2();  // Reading the page fault register
   uint pa;
   int pagenum, refcount;
@@ -46,8 +45,9 @@ void pagefault(void)
   panic("pagefault");
   }
 
-  if(va >= KERNBASE || (pte = walkpgdir(proc->pgdir, (void*)va, 0)) == 0 
-     || !(*pte & PTE_P) || !(*pte & PTE_U)) {
+  if(va >= KERNBASE || (pte = walkpgdir(proc->pgdir, (void*)va, 0)) == 0
+                    || !(*pte & PTE_P) || !(*pte & PTE_U)) 
+  {
     cprintf("pid %d %s: illegal memory access on cpu %d addr 0x%x -- kill proc\n",
             proc->pid, proc->name, cpu->apicid, va);
     proc->killed = 1;
@@ -60,12 +60,10 @@ void pagefault(void)
 
     pa = PTE_ADDR(*pte);  //Address of the flag register
     pagenum = pa / PGSIZE;
-    // cprintf("pagenum %d\n", pagenum);
     refcount = getpageref(pagenum);
 
     if(refcount == 1) {
       *pte |= PTE_W;
-      // cprintf("refcount 1 : made writable\n");
     } else if(refcount > 1) {
 
       mem = kalloc();
@@ -78,7 +76,6 @@ void pagefault(void)
       decpageref(pagenum);
       *pte = V2P(mem) | PTE_P | PTE_W | PTE_U;
 
-      // cprintf("new mem allocated\n");
     } else {
       panic("pagefault wrong refcount");
     }
