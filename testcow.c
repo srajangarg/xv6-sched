@@ -55,13 +55,32 @@ void test3()
   if(fork() == 0)
   {
     printf(1, "Free pages after fork : %d, x : %d\n", getNumFreePages(), x);
+    sleep(2);
+    exit();
+  }
+  else
+  {
+    sleep(1);
+    x = 2;
+    printf(1, "Free pages after updating x in parent: %d, x : %d\n", getNumFreePages(), x);
+    wait();
+    printf(1, "Free pages after reaping child : %d, x : %d\n", getNumFreePages(), x);
+  }
+}
+
+void test4()
+{
+  printf(1, "Free pages before fork : %d, x : %d\n", getNumFreePages(), x);
+  if(fork() == 0)
+  {
+    printf(1, "Free pages after fork : %d, x : %d\n", getNumFreePages(), x);
     exit();
   }
   else
   {
     wait();
     printf(1, "Free pages after reaping child : %d, x : %d\n", getNumFreePages(), x);
-    x = 2;
+    x = 3;
     printf(1, "Free pages after updating x in parent: %d, x : %d\n", getNumFreePages(), x);
   }
 }
@@ -78,6 +97,10 @@ int main()
 
   printf(1, "Test Case 3 ...\n");
   test3();
+  printf(1, "------------------------\n");
+
+  printf(1, "Test Case 4 ...\n");
+  test4();
   printf(1, "------------------------\n");
 
   exit();
