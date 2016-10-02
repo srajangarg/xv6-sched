@@ -32,6 +32,58 @@ idtinit(void)
   lidt(idt, sizeof(idt));
 }
 
+void pagefault(void)
+{
+  uint va = rcr2();  // Reading the page fault register
+  uint pa;
+  int pagenum, refcount;
+  pte_t *pte;
+  char *mem;
+
+  if(proc == 0){
+  cprintf("pagefault with no user process from cpu %d, addr 0x%x\n", cpu->apicid, va);
+  panic("pagefault");
+  }
+
+  if(va >= KERNBASE || (pte = walkpgdir(proc->pgdir, (void*)va, 0)) == 0
+                    || !(*pte & PTE_P) || !(*pte & PTE_U)) 
+  {
+    cprintf("pid %d %s: illegal memory access on cpu %d addr 0x%x -- kill proc\n",
+            proc->pid, proc->name, cpu->apicid, va);
+    proc->killed = 1;
+    return;
+  }
+
+  if(*pte & PTE_W) {
+    panic("pagefault writeable");
+  } else {
+
+    pa = PTE_ADDR(*pte);  //Address of the flag register
+    pagenum = pa / PGSIZE;
+    refcount = getpageref(pagenum);
+
+    if(refcount == 1) {
+      *pte |= PTE_W;
+    } else if(refcount > 1) {
+
+      mem = kalloc();
+      if(mem == 0) {
+        cprintf("pid %d %s: pagefault out of memory--kill proc\n", proc->pid, proc->name);
+        proc->killed = 1;
+        return;
+      }
+      memmove(mem, (char*)P2V(pa), PGSIZE);
+      decpageref(pagenum);
+      *pte = V2P(mem) | PTE_P | PTE_W | PTE_U;
+
+    } else {
+      panic("pagefault wrong refcount");
+    }
+
+    lcr3(V2P(proc->pgdir));
+  }
+} 
+
 //PAGEBREAK: 41
 void
 trap(struct trapframe *tf)
@@ -76,6 +128,10 @@ trap(struct trapframe *tf)
     cprintf("cpu%d: spurious interrupt at %x:%x\n",
             cpunum(), tf->cs, tf->eip);
     lapiceoi();
+    break;
+
+  case T_PGFLT:
+    pagefault();
     break;
 
   //PAGEBREAK: 13

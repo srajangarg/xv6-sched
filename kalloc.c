@@ -20,6 +20,7 @@ struct {
   struct spinlock lock;
   int use_lock;
   struct run *freelist;
+  uchar pageref[PHYSTOP/PGSIZE];
 } kmem;
 
 // Initialization happens in two phases.
@@ -64,6 +65,13 @@ kfree(char *v)
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
 
+  int pagenum = V2P(v) / PGSIZE;
+  if(kmem.pageref[pagenum] > 0)
+    kmem.pageref[pagenum]--;
+    // cprintf("dec %d\n", pagenum);
+  if(kmem.pageref[pagenum] > 0)
+    return;
+
   // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
 
@@ -88,9 +96,68 @@ kalloc(void)
     acquire(&kmem.lock);
   r = kmem.freelist;
   if(r)
+  {
     kmem.freelist = r->next;
+    int pagenum = V2P(r) / PGSIZE;
+    kmem.pageref[pagenum] = 1;
+    // cprintf("inc %d\n", pagenum);
+  }
   if(kmem.use_lock)
     release(&kmem.lock);
   return (char*)r;
 }
 
+int
+getfreepages(void)
+{
+  int i = 0;
+  struct run *r = kmem.freelist;
+  while((r = r->next))
+    i++;
+  return i;
+}
+
+int
+incpageref(int pagenum)
+{
+  if (pagenum < (PHYSTOP/PGSIZE))
+  {
+    if(kmem.use_lock)
+      acquire(&kmem.lock);
+    kmem.pageref[pagenum] += 1;
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    return 0;
+  }
+  return -1;
+}
+
+int
+decpageref(int pagenum)
+{
+  if (pagenum < (PHYSTOP/PGSIZE))
+  {
+    if(kmem.use_lock)
+      acquire(&kmem.lock);
+    kmem.pageref[pagenum] -= 1;
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    return 0;
+  }
+  return -1;
+}
+
+int
+getpageref(int pagenum)
+{
+  if (pagenum < (KERNBASE/PGSIZE))
+  {
+    if(kmem.use_lock)
+      acquire(&kmem.lock);
+    int x = kmem.pageref[pagenum];
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    return x;
+  }
+  return -1;
+}
